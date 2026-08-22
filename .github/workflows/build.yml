@@ -124,7 +124,96 @@ jobs:
           </resources>
           EOF
 
-          cat > app/src/main/java/com/taptheball/game/MainActivity.java <<'EOF'
+                    cat > app/src/main/java/com/taptheball/game/MainActivity.java <<'EOF'
+          package com.taptheball.game;
+
+          import android.annotation.SuppressLint;
+          import android.os.Bundle;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          import androidx.appcompat.app.AppCompatActivity;
+
+          import com.google.android.gms.ads.AdRequest;
+          import com.google.android.gms.ads.FullScreenContentCallback;
+          import com.google.android.gms.ads.LoadAdError;
+          import com.google.android.gms.ads.MobileAds;
+          import com.google.android.gms.ads.interstitial.InterstitialAd;
+          import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+
+          public class MainActivity extends AppCompatActivity {
+
+              private InterstitialAd mInterstitialAd;
+
+              @SuppressLint("SetJavaScriptEnabled")
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  MobileAds.initialize(this, initializationStatus -> {});
+
+                  loadInterstitial();
+
+                  WebView webView = new WebView(this);
+                  webView.setWebViewClient(new WebViewClient());
+
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setMediaPlaybackRequiresUserGesture(false);
+
+                  webView.addJavascriptInterface(new AndroidBridge(), "Android");
+
+                  webView.loadUrl("https://h22396031.github.io/tap-the-ball/");
+
+                  setContentView(webView);
+              }
+
+              private void loadInterstitial() {
+                  AdRequest adRequest = new AdRequest.Builder().build();
+
+                  InterstitialAd.load(
+                          this,
+                          "ca-app-pub-3940256099942544/1033173712",
+                          adRequest,
+                          new InterstitialAdLoadCallback() {
+
+                              @Override
+                              public void onAdLoaded(InterstitialAd interstitialAd) {
+                                  mInterstitialAd = interstitialAd;
+
+                                  mInterstitialAd.setFullScreenContentCallback(
+                                          new FullScreenContentCallback() {
+                                              @Override
+                                              public void onAdDismissedFullScreenContent() {
+                                                  mInterstitialAd = null;
+                                                  loadInterstitial();
+                                              }
+                                          });
+                              }
+
+                              @Override
+                              public void onAdFailedToLoad(LoadAdError adError) {
+                                  mInterstitialAd = null;
+                              }
+                          });
+              }
+
+              private class AndroidBridge {
+
+                  @JavascriptInterface
+                  public void showInterstitial() {
+                      runOnUiThread(() -> {
+                          if (mInterstitialAd != null) {
+                              mInterstitialAd.show(MainActivity.this);
+                          }
+                      });
+                  }
+              }
+          }
+          EOF
           package com.taptheball.game;
 
           import android.os.Bundle;
