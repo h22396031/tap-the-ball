@@ -45,10 +45,12 @@ jobs:
           rootProject.name = "TapTheBall"
           include ":app"
           EOF
+
           cat > gradle.properties <<'EOF'
           android.useAndroidX=true
           android.enableJetifier=true
           EOF
+
           cat > build.gradle <<'EOF'
           plugins {
               id 'com.android.application' version '8.7.3' apply false
@@ -85,6 +87,15 @@ jobs:
           </resources>
           EOF
 
+          cat > app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+              <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:windowFullscreen">true</item>
+              </style>
+          </resources>
+          EOF
+
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -115,16 +126,7 @@ jobs:
           </manifest>
           EOF
 
-          cat > app/src/main/res/values/styles.xml <<'EOF'
-          <resources>
-              <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-                  <item name="android:fontFamily">sans</item>
-                  <item name="android:windowFullscreen">true</item>
-              </style>
-          </resources>
-          EOF
-
-                    cat > app/src/main/java/com/taptheball/game/MainActivity.java <<'EOF'
+          cat > app/src/main/java/com/taptheball/game/MainActivity.java <<'EOF'
           package com.taptheball.game;
 
           import android.annotation.SuppressLint;
@@ -214,39 +216,6 @@ jobs:
               }
           }
           EOF
-          package com.taptheball.game;
-
-          import android.os.Bundle;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-
-          import androidx.appcompat.app.AppCompatActivity;
-
-          import com.google.android.gms.ads.MobileAds;
-
-          public class MainActivity extends AppCompatActivity {
-
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-
-                  MobileAds.initialize(this, initializationStatus -> {});
-
-                  WebView webView = new WebView(this);
-                  webView.setWebViewClient(new WebViewClient());
-
-                  WebSettings settings = webView.getSettings();
-                  settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
-                  settings.setMediaPlaybackRequiresUserGesture(false);
-
-                  webView.loadUrl("https://h22396031.github.io/tap-the-ball/");
-
-                  setContentView(webView);
-              }
-          }
-          EOF
 
       - name: Build APK
         run: |
@@ -258,4 +227,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tap-the-ball-test-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk                          
