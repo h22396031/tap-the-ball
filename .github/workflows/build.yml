@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -75,7 +75,7 @@ jobs:
                   targetSdk 35
                   versionCode 1
                   versionName '1.0'
-          }
+              }
           }
 
           dependencies {
@@ -177,17 +177,17 @@ jobs:
               }
 
               private void loadInterstitial() {
-                  AdRequest adRequest = new AdRequest.Builder().build();
+                  AdRequest request = new AdRequest.Builder().build();
 
                   InterstitialAd.load(
                           this,
                           "ca-app-pub-6391578265023722/9399286320",
-                          adRequest,
+                          request,
                           new InterstitialAdLoadCallback() {
 
                               @Override
-                              public void onAdLoaded(InterstitialAd interstitialAd) {
-                                  mInterstitialAd = interstitialAd;
+                              public void onAdLoaded(InterstitialAd ad) {
+                                  mInterstitialAd = ad;
 
                                   mInterstitialAd.setFullScreenContentCallback(
                                           new FullScreenContentCallback() {
@@ -200,10 +200,11 @@ jobs:
                               }
 
                               @Override
-                              public void onAdFailedToLoad(LoadAdError adError) {
+                              public void onAdFailedToLoad(LoadAdError error) {
                                   mInterstitialAd = null;
                               }
-                          });
+                          }
+                  );
               }
 
               private class AndroidBridge {
@@ -211,9 +212,14 @@ jobs:
                   @JavascriptInterface
                   public void showInterstitial() {
                       runOnUiThread(() -> {
+
                           if (mInterstitialAd != null) {
                               mInterstitialAd.show(MainActivity.this);
+                              mInterstitialAd = null;
+                          } else {
+                              loadInterstitial();
                           }
+
                       });
                   }
               }
@@ -221,13 +227,19 @@ jobs:
           EOF
 
       - name: Build APK
+        shell: bash
         run: |
-          curl -L -o gradle.zip https://services.gradle.org/distributions/gradle-8.10.2-bin.zip
+          set -e
+
+          curl -L -o gradle.zip \
+            https://services.gradle.org/distributions/gradle-8.10.2-bin.zip
+
           unzip -q gradle.zip
+
           ./gradle-8.10.2/bin/gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: tap-the-ball-test-apk
-          path: app/build/outputs/apk/debug/app-debug.apk          
+          name: tap-the-ball-admob-apk
+          path: app/build/outputs/apk/debug/app-debug.apk                     
