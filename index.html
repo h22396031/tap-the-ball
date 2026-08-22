@@ -613,7 +613,11 @@ message.innerHTML=
 message.style.display="block";
 
 playSound(250,.5);
-
+if(window.Android && Android.showInterstitial){
+    setTimeout(function(){
+        Android.showInterstitial();
+    },500);
+    }
 }
 
 
